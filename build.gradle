@@ -1,0 +1,68 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
+
+    }
+}
+
+allprojects {
+    group 'io.token'
+    version '1.0-SNAPSHOT'
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'com.google.protobuf'
+    apply plugin: 'application'
+
+    sourceCompatibility = 1.8
+
+    mainClassName='server.Application'
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url 'https://token.jfrog.io/token/public-libs-release-local/' }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+        compile 'grpcbridge:grpcbridge:1.0.13'
+        compile group: 'io.token.sdk', name: 'tokenio-sdk-java', version: '1.0.69'
+        compile group: 'io.grpc', name: 'grpc-netty', version: '0.15.0'
+        compile group: 'io.grpc', name: 'grpc-stub', version: '0.15.0'
+        compile "com.sparkjava:spark-core:2.5"
+        compile group: 'io.token.proto', name: 'tokenio-proto-common', version: '1.0.391'
+    }
+
+    protobuf {
+        protoc {
+            artifact = 'com.google.protobuf:protoc:3.0.0'
+        }
+
+        plugins {
+            grpc {
+                artifact = 'io.grpc:protoc-gen-grpc-java:0.15.0'
+            }
+        }
+
+        generateProtoTasks {
+            all()*.plugins {
+                grpc {}
+            }
+        }
+    }
+
+    idea {
+        module {
+            sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/java");
+            sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/grpc");
+            sourceDirs += file("${protobuf.generatedFilesBaseDir}/test/java");
+            sourceDirs += file("${protobuf.generatedFilesBaseDir}/test/grpc");
+        }
+    }
+}

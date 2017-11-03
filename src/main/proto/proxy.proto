@@ -1,0 +1,60 @@
+syntax = "proto3";
+package server.proto;
+
+import "token.proto";
+import "alias.proto";
+import "transfer.proto";
+import "account.proto";
+import "member.proto";
+import "google/api/annotations.proto";
+
+message GetMemberRequest {
+}
+
+message GetMemberResponse {
+  string member_id = 1;
+  repeated io.token.proto.common.alias.Alias aliases = 2;
+}
+
+message GetTokenRequest {
+  string token_id = 1;
+}
+
+message GetTokenResponse {
+  io.token.proto.common.token.Token token = 1;
+}
+
+message RedeemTokenRequest {
+  string token_id = 1;
+  double amount = 2;
+  string currency = 3;
+  io.token.proto.common.account.BankAccount account = 4;
+}
+
+message RedeemTokenResponse {
+  io.token.proto.common.transfer.Transfer transfer = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Proxy Service.
+//
+
+service ProxyService {
+  rpc GetMember (GetMemberRequest) returns (GetMemberResponse) {
+       option (google.api.http) = {
+        get: "/member"
+    };
+  }
+
+  rpc GetToken (GetTokenRequest) returns (GetTokenResponse) {
+    option (google.api.http) = {
+        get: "/tokens/{token_id}"
+    };
+  }
+
+  rpc RedeemToken (RedeemTokenRequest) returns (RedeemTokenResponse) {
+    option (google.api.http) = {
+        put: "/tokens/{token_id}"
+    };
+  }
+}
