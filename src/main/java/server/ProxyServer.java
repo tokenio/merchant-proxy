@@ -96,7 +96,6 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return initialized SDK object
      */
     private TokenIO initializeSdk() throws IOException {
-        System.out.println(config);
         Path keys = Files.createDirectories(Paths.get(config.getString("keysDir")));
         return TokenIO.builder()
                 .connectTo(TokenCluster.valueOf(config.getString("environment")))
@@ -117,7 +116,6 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return newly-created member
      */
     private Member createMember(TokenIO tokenIO) {
-        System.out.println("Creating member");
         // Generate a random username.
         // If we try to create a member with an already-used name,
         // it will fail.
@@ -143,7 +141,6 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return Logged-in member.
      */
     private Member loginMember(TokenIO tokenIO, String memberId) {
-        System.out.println("Logging in");
         try {
             return tokenIO.login(memberId);
         } catch (StatusRuntimeException sre) {
