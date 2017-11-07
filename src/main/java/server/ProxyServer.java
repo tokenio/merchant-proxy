@@ -1,24 +1,27 @@
 package server;
 
-import static io.grpc.Status.Code.NOT_FOUND;
-import static io.token.TokenIO.TokenCluster.SANDBOX;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.EMAIL;
-import static io.token.util.Util.generateNonce;
+import static io.token.rpc.util.Converters.execute;
 
 import com.google.protobuf.TextFormat;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.token.Member;
 import io.token.TokenIO;
+import io.token.TokenIO.TokenCluster;
+import io.token.proto.common.account.AccountProtos.BankAccount;
+import io.token.proto.common.account.AccountProtos.BankAccount.Sepa;
 import io.token.proto.common.alias.AliasProtos;
-import io.token.proto.common.transferinstructions.TransferInstructionsProtos;
+import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
+import server.proto.Proxy.CreateTransferRequest;
+import server.proto.Proxy.CreateTransferResponse;
 import server.proto.Proxy.GetMemberRequest;
 import server.proto.Proxy.GetMemberResponse;
 import server.proto.Proxy.GetTokenRequest;
 import server.proto.Proxy.GetTokenResponse;
-import server.proto.Proxy.RedeemTokenRequest;
-import server.proto.Proxy.RedeemTokenResponse;
 import server.proto.ProxyServiceGrpc.ProxyServiceImplBase;
 
 import java.io.File;
@@ -36,23 +39,72 @@ import org.slf4j.LoggerFactory;
  */
 public class ProxyServer extends ProxyServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ProxyServer.class);
-
     private Member member;
+    private Config config;
 
-    public ProxyServer() throws IOException {
+    ProxyServer() throws IOException {
+        config = ConfigFactory.load();
         TokenIO lib = initializeSdk();
         member = initializeMember(lib);
     }
 
-    public TokenIO initializeSdk() throws IOException {
-        Path keys = Files.createDirectories(Paths.get("./keys"));
+    @Override
+    public void getMember(GetMemberRequest request,
+                             StreamObserver<GetMemberResponse> responseObserver) {
+        execute(responseObserver, () -> {
+            logger.info("Get({})", TextFormat.shortDebugString(request));
+            return GetMemberResponse.newBuilder()
+                    .setMemberId(member.memberId())
+                    .addAllAliases(member.aliases())
+                    .build();
+        });
+    }
+
+    @Override
+    public void getToken(GetTokenRequest request,
+                             StreamObserver<GetTokenResponse> responseObserver) {
+        execute(responseObserver, () -> {
+            logger.info("Get({})", TextFormat.shortDebugString(request));
+            return GetTokenResponse.newBuilder()
+                .setToken(member.getToken(request.getTokenId()))
+                .build();
+        });
+    }
+
+    @Override
+    public void createTransfer(CreateTransferRequest request,
+                             StreamObserver<CreateTransferResponse> responseObserver) {
+        execute(responseObserver, () -> {
+            logger.info("Put({})", TextFormat.shortDebugString(request));
+            return CreateTransferResponse.newBuilder()
+                .setTransfer(member.redeemToken(
+                        member.getToken(request.getTokenId()),
+                        request.getAmount(),
+                        request.getCurrency(),
+                        TransferEndpoint.newBuilder()
+                                .setAccount(BankAccount.newBuilder()
+                                        .setSepa(Sepa.newBuilder()
+                                                .setIban(config.getString("destinationIban"))))
+                                .build()))
+                .build();
+            });
+    }
+
+    /**
+     * Initializes the SDK by connecting to Token, and loading or creating a member
+     *
+     * @return initialized SDK object
+     */
+    private TokenIO initializeSdk() throws IOException {
+        System.out.println(config);
+        Path keys = Files.createDirectories(Paths.get(config.getString("keysDir")));
         return TokenIO.builder()
-                .connectTo(SANDBOX)
+                .connectTo(TokenCluster.valueOf(config.getString("environment")))
                 // This KeyStore reads private keys from files.
                 // Here, it's set up to read the ./keys dir.
                 .withKeyStore(new UnsecuredFileSystemKeyStore(
                         keys.toFile()))
-                .devKey("4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI")
+                .devKey(config.getString("devKey"))
                 .build();
     }
 
@@ -65,15 +117,19 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return newly-created member
      */
     private Member createMember(TokenIO tokenIO) {
-        logger.info("CREATING MEMBER");
+        System.out.println("Creating member");
         // Generate a random username.
         // If we try to create a member with an already-used name,
         // it will fail.
-        String email = "merchant-sample-" + generateNonce().toLowerCase() + "+noverify@example.com";
+        String email = config.getString("email").toLowerCase();
         AliasProtos.Alias alias = AliasProtos.Alias.newBuilder()
                 .setType(EMAIL)
                 .setValue(email)
                 .build();
+        if (tokenIO.aliasExists(alias)) {
+            throw new RuntimeException(
+                    "Email already taken. Change email and try again.");
+        }
         return tokenIO.createMember(alias);
         // The newly-created member is automatically logged in.
     }
@@ -87,18 +143,15 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return Logged-in member.
      */
     private Member loginMember(TokenIO tokenIO, String memberId) {
+        System.out.println("Logging in");
         try {
             return tokenIO.login(memberId);
         } catch (StatusRuntimeException sre) {
-            if (sre.getStatus().getCode() == NOT_FOUND) {
-                // We think we have a member's ID and keys, but we can't log in.
-                // In the sandbox testing environment, this can happen:
-                // Sometimes, the member service erases the test members.
-                throw new RuntimeException(
-                        "Couldn't log in saved member, not found. Remove keys dir and try again.");
-            } else {
-                throw new RuntimeException(sre);
-            }
+            // We think we have a member's ID and keys, but we can't log in.
+            // In the sandbox testing environment, this can happen:
+            // Sometimes, the member service erases the test members.
+            throw new RuntimeException(
+                    "Couldn't log in saved member, not found. Remove keys dir and try again.");
         }
     }
 
@@ -114,52 +167,19 @@ public class ProxyServer extends ProxyServiceImplBase {
         // Look for such a directory.
         //   If found, try to log in with that memberId
         //   If not found, create a new member.
-        File keysDir = new File("./keys");
+        File keysDir = new File(config.getString("keysDir"));
         String[] paths = keysDir.list();
 
         return Arrays.stream(paths)
                 .filter(p -> p.contains("_")) // find dir names containing "_"
                 .map(p -> p.replace("_", ":")) // member ID
-                .findFirst()
                 .map(memberId -> loginMember(tokenIO, memberId))
-                .orElse(createMember(tokenIO));
-    }
-
-    @Override
-    public void getMember(GetMemberRequest request,
-                             StreamObserver<GetMemberResponse> responseObserver) {
-        logger.info("Get({})", TextFormat.shortDebugString(request));
-        responseObserver.onNext(GetMemberResponse.newBuilder()
-                .setMemberId(member.memberId())
-                .addAllAliases(member.aliases())
-                .build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getToken(GetTokenRequest request,
-                             StreamObserver<GetTokenResponse> responseObserver) {
-        logger.info("Get({})", TextFormat.shortDebugString(request));
-        responseObserver.onNext(GetTokenResponse.newBuilder()
-                .setToken(member.getToken(request.getTokenId()))
-                .build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void redeemToken(RedeemTokenRequest request,
-                             StreamObserver<RedeemTokenResponse> responseObserver) {
-        logger.info("Put({})", TextFormat.shortDebugString(request));
-        responseObserver.onNext(RedeemTokenResponse.newBuilder()
-                .setTransfer(member.redeemToken(
-                        member.getToken(request.getTokenId()),
-                        request.getAmount(),
-                        request.getCurrency(),
-                        TransferInstructionsProtos.TransferEndpoint.newBuilder()
-                                .setAccount(request.getAccount())
-                                .build()))
-                .build());
-        responseObserver.onCompleted();
+                .filter(member -> member.aliases().stream()
+                                .anyMatch(alias ->
+                                        alias.getValue().equals(
+                                                config.getString("email").toLowerCase())))
+                .findFirst()
+                .orElseGet(() -> createMember(tokenIO));
     }
 }
 
