@@ -9,7 +9,7 @@ get the details of that token, or PPST /transfers to make a transfer on that tok
 The steps to achieve this are the following:
 1. Use the merchant-sample-js or merchant-sample-java to create a website with a Token
 button, or create a custom website with the button, and the client side javascript code
-explained in the[merchant checkout docs](https://developer.token.io/merchant-checkout/).
+explained in the [merchant checkout docs](https://developer.token.io/merchant-checkout/).
 2. Change the application.conf file, with email and bank account number to receive funds
 3. Start this proxy server locally (./gradlew build run)
 4. Call GET /member to get the alias of the member
