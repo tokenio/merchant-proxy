@@ -25,12 +25,12 @@ public class Application {
 
     public static void main(String[] args) throws Exception {
         // Create service implementation instance.
-        ProxyServer sample = new ProxyServer();
+        ProxyServer proxyServer = new ProxyServer();
 
         // Create gRPC server, bind the service implementation and start the server.
         Server rpcServer = ServerBuilder
                 .forPort(9000)
-                .addService(sample.bindService())
+                .addService(proxyServer.bindService())
                 .build();
         rpcServer.start();
 
@@ -38,7 +38,7 @@ public class Application {
         // Create new HTTP to gRPC bridge.
         Bridge bridge = new BridgeBuilder()
                 .addFile(server.proto.Proxy.getDescriptor())
-                .addService(sample.bindService())
+                .addService(proxyServer.bindService())
                 .build();
 
         // Map Spark HTTP endpoints to the Bridge.

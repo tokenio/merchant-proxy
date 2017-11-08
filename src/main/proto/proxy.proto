@@ -24,14 +24,13 @@ message GetTokenResponse {
   io.token.proto.common.token.Token token = 1;
 }
 
-message RedeemTokenRequest {
+message CreateTransferRequest {
   string token_id = 1;
   double amount = 2;
   string currency = 3;
-  io.token.proto.common.account.BankAccount account = 4;
 }
 
-message RedeemTokenResponse {
+message CreateTransferResponse {
   io.token.proto.common.transfer.Transfer transfer = 1;
 }
 
@@ -52,9 +51,9 @@ service ProxyService {
     };
   }
 
-  rpc RedeemToken (RedeemTokenRequest) returns (RedeemTokenResponse) {
+  rpc CreateTransfer (CreateTransferRequest) returns (CreateTransferResponse) {
     option (google.api.http) = {
-        put: "/tokens/{token_id}"
+        post: "/transfers"
     };
   }
 }
