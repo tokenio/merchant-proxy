@@ -89,8 +89,7 @@ public class ProxyServer extends ProxyServiceImplBase {
         execute(responseObserver, () -> {
             logger.info("Post({})", TextFormat.shortDebugString(request));
             return CreateTransferResponse.newBuilder()
-                    .setTransfer(member.redeemToken(
-                            member.getToken(request.getTokenId())))
+                    .setTransfer(member.redeemToken(member.getToken(request.getTokenId())))
                     .build();
         });
     }

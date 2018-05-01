@@ -63,14 +63,6 @@ message ParseTokenRequestCallbackResponse {
   string state = 2;
 }
 
-message RedeemTokenRequest {
-  string token_id = 1;
-}
-
-message RedeemTokenResponse {
-  io.token.proto.common.transfer.Transfer transfer = 1;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Proxy Service.
 //
