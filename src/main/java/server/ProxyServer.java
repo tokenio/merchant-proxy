@@ -1,5 +1,6 @@
 package server;
 
+import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.EMAIL;
 import static io.token.rpc.util.Converters.execute;
 
@@ -11,17 +12,24 @@ import io.grpc.stub.StreamObserver;
 import io.token.Member;
 import io.token.TokenIO;
 import io.token.TokenIO.TokenCluster;
-import io.token.proto.common.account.AccountProtos.BankAccount;
-import io.token.proto.common.account.AccountProtos.BankAccount.Sepa;
+import io.token.TokenRequest;
+import io.token.TokenRequestCallback;
+import io.token.TransferTokenBuilder;
 import io.token.proto.common.alias.AliasProtos;
 import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
 import server.proto.Proxy.CreateTransferRequest;
 import server.proto.Proxy.CreateTransferResponse;
+import server.proto.Proxy.GenerateTokenRequestUrlRequest;
+import server.proto.Proxy.GenerateTokenRequestUrlResponse;
 import server.proto.Proxy.GetMemberRequest;
 import server.proto.Proxy.GetMemberResponse;
 import server.proto.Proxy.GetTokenRequest;
 import server.proto.Proxy.GetTokenResponse;
+import server.proto.Proxy.ParseTokenRequestCallbackRequest;
+import server.proto.Proxy.ParseTokenRequestCallbackResponse;
+import server.proto.Proxy.StoreTokenRequestRequest;
+import server.proto.Proxy.StoreTokenRequestResponse;
 import server.proto.ProxyServiceGrpc.ProxyServiceImplBase;
 
 import java.io.File;
@@ -41,16 +49,18 @@ public class ProxyServer extends ProxyServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ProxyServer.class);
     private Member member;
     private Config config;
+    private TokenIO tokenIO;
 
     ProxyServer() throws IOException {
         config = ConfigFactory.load();
-        TokenIO lib = initializeSdk();
-        member = initializeMember(lib);
+        tokenIO = initializeSdk();
+        member = initializeMember(tokenIO);
     }
 
     @Override
-    public void getMember(GetMemberRequest request,
-                             StreamObserver<GetMemberResponse> responseObserver) {
+    public void getMember(
+            GetMemberRequest request,
+            StreamObserver<GetMemberResponse> responseObserver) {
         execute(responseObserver, () -> {
             logger.info("Get({})", TextFormat.shortDebugString(request));
             return GetMemberResponse.newBuilder()
@@ -61,33 +71,85 @@ public class ProxyServer extends ProxyServiceImplBase {
     }
 
     @Override
-    public void getToken(GetTokenRequest request,
-                             StreamObserver<GetTokenResponse> responseObserver) {
+    public void getToken(
+            GetTokenRequest request,
+            StreamObserver<GetTokenResponse> responseObserver) {
         execute(responseObserver, () -> {
             logger.info("Get({})", TextFormat.shortDebugString(request));
             return GetTokenResponse.newBuilder()
-                .setToken(member.getToken(request.getTokenId()))
-                .build();
+                    .setToken(member.getToken(request.getTokenId()))
+                    .build();
         });
     }
 
     @Override
-    public void createTransfer(CreateTransferRequest request,
-                             StreamObserver<CreateTransferResponse> responseObserver) {
+    public void createTransfer(
+            CreateTransferRequest request,
+            StreamObserver<CreateTransferResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Put({})", TextFormat.shortDebugString(request));
+            logger.info("Post({})", TextFormat.shortDebugString(request));
             return CreateTransferResponse.newBuilder()
-                .setTransfer(member.redeemToken(
-                        member.getToken(request.getTokenId()),
-                        request.getAmount(),
-                        request.getCurrency(),
-                        TransferEndpoint.newBuilder()
-                                .setAccount(BankAccount.newBuilder()
-                                        .setSepa(Sepa.newBuilder()
-                                                .setIban(config.getString("destinationIban"))))
-                                .build()))
-                .build();
-            });
+                    .setTransfer(member.redeemToken(
+                            member.getToken(request.getTokenId())))
+                    .build();
+        });
+    }
+
+    @Override
+    public void storeTokenRequest(
+            StoreTokenRequestRequest request,
+            StreamObserver<StoreTokenRequestResponse> responseObserver) {
+        execute(responseObserver, () -> {
+            logger.info("Post({})", TextFormat.shortDebugString(request));
+
+            TransferTokenBuilder transferTokenBuilder = new TransferTokenBuilder(
+                    request.getAmount(),
+                    request.getCurrency())
+                    .setToAlias(member.firstAlias())
+                    .setToMemberId(member.memberId())
+                    .setDescription(request.getDescription())
+                    .addDestination(TransferEndpoint.newBuilder()
+                            .setAccount(request.getDestination())
+                            .build());
+
+            String tokenRequestId = member.storeTokenRequest(TokenRequest
+                    .create(transferTokenBuilder)
+                    .setOption(REDIRECT_URL, request.getCallbackUrl()));
+
+            return StoreTokenRequestResponse.newBuilder()
+                    .setTokenRequestId(tokenRequestId)
+                    .build();
+        });
+    }
+
+    @Override
+    public void generateTokenRequestUrl(
+            GenerateTokenRequestUrlRequest request,
+            StreamObserver<GenerateTokenRequestUrlResponse> responseObserver) {
+        logger.info("Get({})", TextFormat.shortDebugString(request));
+        execute(responseObserver, () -> {
+            String url = tokenIO.generateTokenRequestUrl(
+                    request.getRequestId(),
+                    request.getState(),
+                    request.getCsrfToken());
+            return GenerateTokenRequestUrlResponse.newBuilder()
+                    .setUrl(url)
+                    .build();
+        });
+    }
+
+    @Override
+    public void parseTokenRequestCallback(
+            ParseTokenRequestCallbackRequest request,
+            StreamObserver<ParseTokenRequestCallbackResponse> responseObserver) {
+        logger.info("Get({})", TextFormat.shortDebugString(request));
+        execute(responseObserver, () -> {
+            TokenRequestCallback callback = tokenIO.parseTokenRequestCallbackUrl(request.getUrl());
+            return ParseTokenRequestCallbackResponse.newBuilder()
+                    .setTokenId(callback.getTokenId())
+                    .setState(callback.getState())
+                    .build();
+        });
     }
 
     /**
@@ -142,7 +204,7 @@ public class ProxyServer extends ProxyServiceImplBase {
      */
     private Member loginMember(TokenIO tokenIO, String memberId) {
         try {
-            return tokenIO.login(memberId);
+            return tokenIO.getMember(memberId);
         } catch (StatusRuntimeException sre) {
             // We think we have a member's ID and keys, but we can't log in.
             // In the sandbox testing environment, this can happen:
@@ -172,9 +234,9 @@ public class ProxyServer extends ProxyServiceImplBase {
                 .map(p -> p.replace("_", ":")) // member ID
                 .map(memberId -> loginMember(tokenIO, memberId))
                 .filter(member -> member.aliases().stream()
-                                .anyMatch(alias ->
-                                        alias.getValue().equals(
-                                                config.getString("email").toLowerCase())))
+                        .anyMatch(alias ->
+                                alias.getValue().equals(
+                                        config.getString("email").toLowerCase())))
                 .findFirst()
                 .orElseGet(() -> createMember(tokenIO));
     }
