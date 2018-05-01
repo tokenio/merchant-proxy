@@ -82,7 +82,7 @@ service ProxyService {
 
   rpc CreateTransfer (CreateTransferRequest) returns (CreateTransferResponse) {
     option (google.api.http) = {
-          post: "/transfers"
+        post: "/transfers"
       };
   }
 
