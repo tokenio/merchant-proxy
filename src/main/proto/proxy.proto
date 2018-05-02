@@ -102,7 +102,7 @@ service ProxyService {
 
   rpc ParseTokenRequestCallback (ParseTokenRequestCallbackRequest) returns (ParseTokenRequestCallbackResponse) {
     option (google.api.http) = {
-        get: "/parse-token-request-callback?url={url}"
+        get: "/parse-token-request-callback?url={url}&csrfToken={csrf_token}"
     };
   }
 }
