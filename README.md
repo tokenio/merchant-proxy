@@ -1,7 +1,7 @@
 ## Merchant Proxy
 
-The merchant proxy is a wrapper server around the java SDK, that enables
-merchants to initiate and accept payments from a user, using a simple HTTP API.
+The merchant proxy is a wrapper server around the [Java SDK](https://github.com/tokenio/sdk-java),
+that enables merchants to initiate and accept payments from a user, using a simple HTTP API.
 
 Following the Token Request flow, a merchant can obtain an id of a token that is endorsed
 by a user. Then it can simply call GET /tokens/:id to get the details of that token, or POST
