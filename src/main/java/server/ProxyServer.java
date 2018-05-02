@@ -144,7 +144,9 @@ public class ProxyServer extends ProxyServiceImplBase {
             StreamObserver<ParseTokenRequestCallbackResponse> responseObserver) {
         logger.info("Get({})", TextFormat.shortDebugString(request));
         execute(responseObserver, () -> {
-            TokenRequestCallback callback = tokenIO.parseTokenRequestCallbackUrl(request.getUrl());
+            TokenRequestCallback callback = tokenIO.parseTokenRequestCallbackUrl(
+                    request.getUrl(),
+                    request.getCsrfToken());
             return ParseTokenRequestCallbackResponse.newBuilder()
                     .setTokenId(callback.getTokenId())
                     .setState(callback.getState())

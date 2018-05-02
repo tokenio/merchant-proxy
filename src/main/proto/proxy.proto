@@ -57,6 +57,7 @@ message GenerateTokenRequestUrlResponse {
 
 message ParseTokenRequestCallbackRequest {
   string url = 1;
+  string csrf_token = 2;
 }
 
 message ParseTokenRequestCallbackResponse {
