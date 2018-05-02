@@ -37,7 +37,8 @@ message StoreTokenRequestRequest {
   string currency = 2;
   string description = 3;
   io.token.proto.common.account.BankAccount destination = 4;
-  string callback_url = 5;
+  string ref_id = 5;
+  string callback_url = 6;
 }
 
 message StoreTokenRequestResponse {

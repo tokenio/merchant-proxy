@@ -106,6 +106,7 @@ public class ProxyServer extends ProxyServiceImplBase {
                     request.getCurrency())
                     .setToAlias(member.firstAlias())
                     .setToMemberId(member.memberId())
+                    .setRefId(request.getRefId())
                     .setDescription(request.getDescription())
                     .addDestination(TransferEndpoint.newBuilder()
                             .setAccount(request.getDestination())
