@@ -56,8 +56,11 @@ public class Application {
     }
 
     private static String handle(Bridge bridge, Request req) {
+        String pathInfo = (req.queryString() == null || req.queryString().isEmpty())
+                ? req.pathInfo()
+                : req.pathInfo() + "?" + req.queryString();
         HttpRequest httpRequest = HttpRequest
-                .builder(HttpMethod.valueOf(req.requestMethod()), req.pathInfo())
+                .builder(HttpMethod.valueOf(req.requestMethod()), pathInfo)
                 .body(req.body())
                 .build();
         return bridge.handle(httpRequest).getBody();

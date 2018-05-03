@@ -26,12 +26,43 @@ message GetTokenResponse {
 
 message CreateTransferRequest {
   string token_id = 1;
-  double amount = 2;
-  string currency = 3;
 }
 
 message CreateTransferResponse {
   io.token.proto.common.transfer.Transfer transfer = 1;
+}
+
+message StoreTokenRequestRequest {
+  double amount = 1;
+  string currency = 2;
+  string description = 3;
+  io.token.proto.common.account.BankAccount destination = 4;
+  string ref_id = 5;
+  string callback_url = 6;
+}
+
+message StoreTokenRequestResponse {
+  string token_request_id = 1;
+}
+
+message GenerateTokenRequestUrlRequest {
+  string request_id = 1;
+  string state = 2;
+  string csrf_token = 3;
+}
+
+message GenerateTokenRequestUrlResponse {
+  string url = 1;
+}
+
+message ParseTokenRequestCallbackRequest {
+  string url = 1;
+  string csrf_token = 2;
+}
+
+message ParseTokenRequestCallbackResponse {
+  string token_id = 1;
+  string state = 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +71,7 @@ message CreateTransferResponse {
 
 service ProxyService {
   rpc GetMember (GetMemberRequest) returns (GetMemberResponse) {
-       option (google.api.http) = {
+    option (google.api.http) = {
         get: "/member"
     };
   }
@@ -54,6 +85,24 @@ service ProxyService {
   rpc CreateTransfer (CreateTransferRequest) returns (CreateTransferResponse) {
     option (google.api.http) = {
         post: "/transfers"
+      };
+  }
+
+  rpc StoreTokenRequest (StoreTokenRequestRequest) returns (StoreTokenRequestResponse) {
+    option (google.api.http) = {
+        post: "/token-requests"
+    };
+  }
+
+  rpc GenerateTokenRequestUrl (GenerateTokenRequestUrlRequest) returns (GenerateTokenRequestUrlResponse) {
+    option (google.api.http) = {
+        get: "/token-request-url?requestId={request_id}&state={state}&csrfToken={csrf_token}"
+    };
+  }
+
+  rpc ParseTokenRequestCallback (ParseTokenRequestCallbackRequest) returns (ParseTokenRequestCallbackResponse) {
+    option (google.api.http) = {
+        get: "/parse-token-request-callback?url={url}&csrfToken={csrf_token}"
     };
   }
 }
