@@ -11,7 +11,7 @@ be found [here](http://developer.token.io/token-request).
 The steps to achieve this are the following:
 1. Use the [merchant-sample-proxy](https://github.com/tokenio/merchant-sample-proxy) to create
 a website with a Token button, or create a custom web app that implements the Token Request flow.
-2. Configure the application.conf file with an email address.
+2. Configure the application.conf file with a domain name.
 3. Start this proxy server: `./gradlew build run`
 4. Call GET /member to get the alias of the member. Make sure the alias is the same one that
 is configured.

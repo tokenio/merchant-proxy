@@ -1,6 +1,7 @@
 package server;
 
 import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
+import static io.token.proto.common.alias.AliasProtos.Alias.Type.DOMAIN;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.EMAIL;
 import static io.token.rpc.util.Converters.execute;
 
@@ -185,12 +186,12 @@ public class ProxyServer extends ProxyServiceImplBase {
         // it will fail.
         String email = config.getString("email").toLowerCase();
         AliasProtos.Alias alias = AliasProtos.Alias.newBuilder()
-                .setType(EMAIL)
+                .setType(DOMAIN)
                 .setValue(email)
                 .build();
         if (tokenIO.aliasExists(alias)) {
             throw new RuntimeException(
-                    "Email already taken. Change email and try again.");
+                    "Domain already taken. Change domain and try again.");
         }
         return tokenIO.createMember(alias);
         // The newly-created member is automatically logged in.
