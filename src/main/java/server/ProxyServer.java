@@ -15,7 +15,6 @@ import io.token.TokenIO.TokenCluster;
 import io.token.TokenRequest;
 import io.token.TokenRequestCallback;
 import io.token.TransferTokenBuilder;
-import io.token.proto.common.alias.AliasProtos;
 import io.token.proto.common.alias.AliasProtos.Alias;
 import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
@@ -192,7 +191,7 @@ public class ProxyServer extends ProxyServiceImplBase {
             throw new RuntimeException(
                     "Domain already taken. Change domain and try again.");
         }
-        return tokenIO.createMember(alias);
+        return tokenIO.createBusinessMember(alias);
         // The newly-created member is automatically logged in.
     }
 
