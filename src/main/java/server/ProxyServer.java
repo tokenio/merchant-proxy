@@ -2,7 +2,6 @@ package server;
 
 import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.DOMAIN;
-import static io.token.proto.common.alias.AliasProtos.Alias.Type.EMAIL;
 import static io.token.rpc.util.Converters.execute;
 
 import com.google.protobuf.TextFormat;
