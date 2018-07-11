@@ -1,7 +1,7 @@
 package server;
 
 import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
-import static io.token.proto.common.alias.AliasProtos.Alias.Type.EMAIL;
+import static io.token.proto.common.alias.AliasProtos.Alias.Type.DOMAIN;
 import static io.token.rpc.util.Converters.execute;
 
 import com.google.protobuf.TextFormat;
@@ -15,7 +15,7 @@ import io.token.TokenIO.TokenCluster;
 import io.token.TokenRequest;
 import io.token.TokenRequestCallback;
 import io.token.TransferTokenBuilder;
-import io.token.proto.common.alias.AliasProtos;
+import io.token.proto.common.alias.AliasProtos.Alias;
 import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
 import server.proto.Proxy.CreateTransferRequest;
@@ -180,19 +180,18 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return newly-created member
      */
     private Member createMember(TokenIO tokenIO) {
-        // Generate a random username.
-        // If we try to create a member with an already-used name,
+        // If we try to create a member with an already-used alias,
         // it will fail.
-        String email = config.getString("email").toLowerCase();
-        AliasProtos.Alias alias = AliasProtos.Alias.newBuilder()
-                .setType(EMAIL)
-                .setValue(email)
+        String domain = config.getString("domain").toLowerCase();
+        Alias alias = Alias.newBuilder()
+                .setType(DOMAIN)
+                .setValue(domain)
                 .build();
         if (tokenIO.aliasExists(alias)) {
             throw new RuntimeException(
-                    "Email already taken. Change email and try again.");
+                    "Domain already taken. Change domain and try again.");
         }
-        return tokenIO.createMember(alias);
+        return tokenIO.createBusinessMember(alias);
         // The newly-created member is automatically logged in.
     }
 
@@ -238,7 +237,7 @@ public class ProxyServer extends ProxyServiceImplBase {
                 .filter(member -> member.aliases().stream()
                         .anyMatch(alias ->
                                 alias.getValue().equals(
-                                        config.getString("email").toLowerCase())))
+                                        config.getString("domain").toLowerCase())))
                 .findFirst()
                 .orElseGet(() -> createMember(tokenIO));
     }
