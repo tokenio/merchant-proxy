@@ -16,6 +16,7 @@ import io.token.TokenRequest;
 import io.token.TokenRequestCallback;
 import io.token.TransferTokenBuilder;
 import io.token.proto.common.alias.AliasProtos;
+import io.token.proto.common.alias.AliasProtos.Alias;
 import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
 import server.proto.Proxy.CreateTransferRequest;
@@ -180,13 +181,12 @@ public class ProxyServer extends ProxyServiceImplBase {
      * @return newly-created member
      */
     private Member createMember(TokenIO tokenIO) {
-        // Generate a random username.
-        // If we try to create a member with an already-used name,
+        // If we try to create a member with an already-used alias,
         // it will fail.
-        String email = config.getString("email").toLowerCase();
-        AliasProtos.Alias alias = AliasProtos.Alias.newBuilder()
+        String domain = config.getString("domain").toLowerCase();
+        Alias alias = Alias.newBuilder()
                 .setType(DOMAIN)
-                .setValue(email)
+                .setValue(domain)
                 .build();
         if (tokenIO.aliasExists(alias)) {
             throw new RuntimeException(
@@ -238,7 +238,7 @@ public class ProxyServer extends ProxyServiceImplBase {
                 .filter(member -> member.aliases().stream()
                         .anyMatch(alias ->
                                 alias.getValue().equals(
-                                        config.getString("email").toLowerCase())))
+                                        config.getString("domain").toLowerCase())))
                 .findFirst()
                 .orElseGet(() -> createMember(tokenIO));
     }
