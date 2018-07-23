@@ -1,17 +1,28 @@
 package server;
 
+import static spark.Spark.delete;
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.patch;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.put;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import grpcbridge.Bridge;
 import grpcbridge.BridgeBuilder;
 import grpcbridge.Exceptions.BridgeException;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import grpcbridge.http.HttpMethod;
 import grpcbridge.http.HttpRequest;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
-
-import static spark.Spark.*;
 
 /**
  * A sample application that demonstrates setting up gRPC {@link Bridge} for
@@ -24,8 +35,12 @@ public class Application {
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) throws Exception {
+        // Setup logging
+        setupLogging();
+
         // Create service implementation instance.
-        ProxyServer proxyServer = new ProxyServer();
+        Config config = ConfigFactory.load();
+        ProxyServer proxyServer = new ProxyServer(config);
 
         // Create gRPC server, bind the service implementation and start the server.
         Server rpcServer = ServerBuilder
@@ -33,13 +48,14 @@ public class Application {
                 .addService(proxyServer.bindService())
                 .build();
         rpcServer.start();
-
-
         // Create new HTTP to gRPC bridge.
         Bridge bridge = new BridgeBuilder()
                 .addFile(server.proto.Proxy.getDescriptor())
                 .addService(proxyServer.bindService())
                 .build();
+
+        // Set port numnber
+        port(config.getInt("port"));
 
         // Map Spark HTTP endpoints to the Bridge.
         get("/*", (req, res) -> handle(bridge, req));
@@ -64,5 +80,14 @@ public class Application {
                 .body(req.body())
                 .build();
         return bridge.handle(httpRequest).getBody();
+    }
+
+    private static void setupLogging() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        context.getLogger("root").setLevel(Level.INFO);
+        context.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+        context.getLogger("io.grpc.netty.NettyClientHandler").setLevel(Level.WARN);
+        context.getLogger("io.netty").setLevel(Level.WARN);
+        context.getLogger("io.token").setLevel(Level.WARN);
     }
 }
