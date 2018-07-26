@@ -278,7 +278,7 @@ curl -X PUT -H 'Content-Type: application/json' "http://127.0.0.1:4567/use-acces
 
 ####  Get Accounts - GET /accounts
 ```bash
-curl -X PUT -H 'Content-Type: application/json' "http://127.0.0.1:4567/use-access-token" -d '{"tokenId":"ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq"}'
+curl -X GET "http://127.0.0.1:4567/accounts"
 ```
 
 ```json
@@ -299,7 +299,7 @@ curl -X PUT -H 'Content-Type: application/json' "http://127.0.0.1:4567/use-acces
 
 ####  Get Account - GET /accounts/{account_id}
 ```bash
-curl -X PUT -H 'Content-Type: application/json' "http://127.0.0.1:4567/use-access-token" -d '{"tokenId":"ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq"}'
+curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ"
 ```
 
 ```json
