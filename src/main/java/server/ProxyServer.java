@@ -81,7 +81,7 @@ public class ProxyServer extends ProxyServiceImplBase {
         tokenIO = initializeSdk();
         member = initializeMember(tokenIO);
 
-        // TODO(RD-581): Remove
+        // TODO(RD-581): Deprecate
         new Timer().schedule(
                 new TimerTask() {
                     public void run() {
