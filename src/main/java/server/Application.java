@@ -28,6 +28,7 @@ import grpcbridge.Bridge;
 import grpcbridge.BridgeBuilder;
 import grpcbridge.http.HttpMethod;
 import grpcbridge.http.HttpRequest;
+import http.Headers;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
@@ -36,6 +37,8 @@ import io.grpc.StatusRuntimeException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +114,11 @@ public class Application {
     }
 
     private static String handle(Bridge bridge, Request req) {
+        Headers.setHeaders(req.headers()
+                .stream()
+                .collect(Collectors.toMap(
+                        keys -> keys,
+                        keys -> req.headers(keys))));
         String pathInfo = (req.queryString() == null || req.queryString().isEmpty())
                 ? req.pathInfo()
                 : req.pathInfo() + "?" + req.queryString();

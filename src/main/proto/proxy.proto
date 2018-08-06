@@ -74,13 +74,6 @@ message RequestAccessTokenResponse {
   string token_request_id = 1;
 }
 
-message UseAccessTokenRequest {
-  string token_id = 1;
-}
-
-message UseAccessTokenResponse {
-}
-
 message GetAccountsRequest {
 }
 
@@ -168,12 +161,6 @@ service ProxyService {
   rpc RequestAccess (RequestAccessTokenRequest) returns (RequestAccessTokenResponse) {
     option (google.api.http) = {
         post: "/access-token-requests"
-    };
-  }
-
-  rpc UseAccessToken (UseAccessTokenRequest) returns (UseAccessTokenResponse) {
-    option (google.api.http) = {
-        put: "/use-access-token"
     };
   }
 

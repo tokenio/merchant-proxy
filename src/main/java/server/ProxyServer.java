@@ -1,5 +1,7 @@
 package server;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static io.grpc.Status.PERMISSION_DENIED;
 import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.DOMAIN;
 import static io.token.proto.common.security.SecurityProtos.Key.Level.STANDARD;
@@ -17,12 +19,10 @@ import static server.proto.Proxy.GetTransactionsRequest;
 import static server.proto.Proxy.GetTransactionsResponse;
 import static server.proto.Proxy.RequestAccessTokenRequest;
 import static server.proto.Proxy.RequestAccessTokenResponse;
-import static server.proto.Proxy.UseAccessTokenRequest;
-import static server.proto.Proxy.UseAccessTokenResponse;
 
-import com.google.common.base.Preconditions;
 import com.google.protobuf.TextFormat;
 import com.typesafe.config.Config;
+import http.Headers;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.token.AccessTokenBuilder;
@@ -36,6 +36,7 @@ import io.token.TransferTokenBuilder;
 import io.token.proto.PagedList;
 import io.token.proto.common.account.AccountProtos;
 import io.token.proto.common.alias.AliasProtos.Alias;
+import io.token.proto.common.transaction.TransactionProtos.Balance;
 import io.token.proto.common.transferinstructions.TransferInstructionsProtos.TransferEndpoint;
 import io.token.security.UnsecuredFileSystemKeyStore;
 import server.proto.Proxy.CreateTransferRequest;
@@ -71,7 +72,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ProxyServer extends ProxyServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ProxyServer.class);
-    private boolean usingAccessToken = false;
     private Member member;
     private Config config;
     private TokenIO tokenIO;
@@ -219,30 +219,23 @@ public class ProxyServer extends ProxyServiceImplBase {
     }
 
     @Override
-    public void useAccessToken(
-            UseAccessTokenRequest request,
-            StreamObserver<UseAccessTokenResponse> responseObserver) {
-        execute(responseObserver, () -> {
-            logger.info("Use access token: ({})", TextFormat.shortDebugString(request));
-
-            member.useAccessToken(request.getTokenId(), false);
-            usingAccessToken = true;
-            return UseAccessTokenResponse.getDefaultInstance();
-        });
-    }
-
-    @Override
     public void getAccounts(
             GetAccountsRequest request,
             StreamObserver<GetAccountsResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Get accounts: ({})", TextFormat.shortDebugString(request));
-            Preconditions.checkArgument(usingAccessToken, "Access token not set!");
+            String tokenId = getTokenId();
+            logger.info(
+                    "Get accounts: token_id: {} ({})",
+                    tokenId,
+                    TextFormat.shortDebugString(request));
 
+            member.useAccessToken(tokenId);
             List<AccountProtos.Account> accounts = member.getAccounts()
                     .stream()
                     .map(Account::protoAccount)
                     .collect(Collectors.toList());
+            member.clearAccessToken();
+
             return GetAccountsResponse.newBuilder()
                     .addAllAccounts(accounts)
                     .build();
@@ -254,11 +247,18 @@ public class ProxyServer extends ProxyServiceImplBase {
             GetAccountRequest request,
             StreamObserver<GetAccountResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Get account: ({})", TextFormat.shortDebugString(request));
-            Preconditions.checkArgument(usingAccessToken, "Access token not set!");
+            String tokenId = getTokenId();
+            logger.info(
+                    "Get account: token_id: {} ({})",
+                    tokenId,
+                    TextFormat.shortDebugString(request));
+
+            member.useAccessToken(tokenId);
+            Account account = member.getAccount(request.getAccountId());
+            member.clearAccessToken();
 
             return GetAccountResponse.newBuilder()
-                    .setAccount(member.getAccount(request.getAccountId()).protoAccount())
+                    .setAccount(account.protoAccount())
                     .build();
         });
     }
@@ -268,11 +268,18 @@ public class ProxyServer extends ProxyServiceImplBase {
             GetBalanceRequest request,
             StreamObserver<GetBalanceResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Get balance: ({})", TextFormat.shortDebugString(request));
-            Preconditions.checkArgument(usingAccessToken, "Access token not set!");
+            String tokenId = getTokenId();
+            logger.info(
+                    "Get balance: token_id: {} ({})",
+                    tokenId,
+                    TextFormat.shortDebugString(request));
+
+            member.useAccessToken(tokenId);
+            Balance balance = member.getBalance(request.getAccountId(), STANDARD);
+            member.clearAccessToken();
 
             return GetBalanceResponse.newBuilder()
-                    .setBalance(member.getBalance(request.getAccountId(), STANDARD))
+                    .setBalance(balance)
                     .build();
         });
     }
@@ -282,14 +289,21 @@ public class ProxyServer extends ProxyServiceImplBase {
             GetTransactionRequest request,
             StreamObserver<GetTransactionResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Get transaction: ({})", TextFormat.shortDebugString(request));
-            Preconditions.checkArgument(usingAccessToken, "Access token not set!");
+            String tokenId = getTokenId();
+            logger.info(
+                    "Get transaction: token_id: {} ({})",
+                    tokenId,
+                    TextFormat.shortDebugString(request));
+
+            member.useAccessToken(tokenId);
+            Transaction transaction = member.getTransaction(
+                    request.getAccountId(),
+                    request.getTransactionId(),
+                    STANDARD);
+            member.clearAccessToken();
 
             return GetTransactionResponse.newBuilder()
-                    .setTransaction(member.getTransaction(
-                            request.getAccountId(),
-                            request.getTransactionId(),
-                            STANDARD))
+                    .setTransaction(transaction)
                     .build();
         });
     }
@@ -299,15 +313,21 @@ public class ProxyServer extends ProxyServiceImplBase {
             GetTransactionsRequest request,
             StreamObserver<GetTransactionsResponse> responseObserver) {
         execute(responseObserver, () -> {
-            logger.info("Get transactions: ({})", TextFormat.shortDebugString(request));
-            Preconditions.checkArgument(usingAccessToken, "Access token not set!");
-            Preconditions.checkArgument(request.getLimit() > 0, "Limit not set properly!");
+            String tokenId = getTokenId();
+            logger.info(
+                    "Get transactions: token_id: {} ({})",
+                    tokenId,
+                    TextFormat.shortDebugString(request));
+            checkArgument(request.getLimit() > 0, "Limit not set properly!");
 
+            member.useAccessToken(tokenId);
             PagedList<Transaction, String> transactions = member.getTransactions(
                     request.getAccountId(),
                     request.getOffset(),
                     request.getLimit(),
                     STANDARD);
+            member.clearAccessToken();
+
             return GetTransactionsResponse.newBuilder()
                     .addAllTransactions(transactions.getList())
                     .setOffset(transactions.getOffset())
@@ -401,6 +421,13 @@ public class ProxyServer extends ProxyServiceImplBase {
                                         config.getString("domain").toLowerCase())))
                 .findFirst()
                 .orElseGet(() -> createMember(tokenIO));
+    }
+
+    private String getTokenId() {
+        return Headers.getHeader("Authorization")
+                .orElseThrow(() -> PERMISSION_DENIED
+                        .withDescription("Access Token Not Set")
+                        .asRuntimeException());
     }
 }
 
