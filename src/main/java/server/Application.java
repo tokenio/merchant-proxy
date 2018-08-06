@@ -104,7 +104,7 @@ public class Application {
         exception(
                 Exception.class,
                 (error, req, res) -> {
-                    logger.error("Unhandled exception", error);
+                    logger.error("Unhandled exception: ", error);
                     res.status(500);
                     res.body(error.toString());
                 });
@@ -135,6 +135,7 @@ public class Application {
             Request request,
             Response response) {
         logger.error("Status runtime exception: ", exception);
+
         StatusRuntimeException ex = (StatusRuntimeException) exception;
         Status status = ex.getStatus();
         int code = errorMap.getOrDefault(status.getCode(), 500);
