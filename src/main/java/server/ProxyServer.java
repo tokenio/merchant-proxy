@@ -28,6 +28,7 @@ import io.grpc.stub.StreamObserver;
 import io.token.AccessTokenBuilder;
 import io.token.Account;
 import io.token.Member;
+import io.token.Representable;
 import io.token.TokenIO;
 import io.token.TokenIO.TokenCluster;
 import io.token.TokenRequest;
@@ -229,12 +230,11 @@ public class ProxyServer extends ProxyServiceImplBase {
                     tokenId,
                     TextFormat.shortDebugString(request));
 
-            member.useAccessToken(tokenId);
-            List<AccountProtos.Account> accounts = member.getAccounts()
+            Representable representable = member.forAccessToken(tokenId);
+            List<AccountProtos.Account> accounts = representable.getAccounts()
                     .stream()
                     .map(Account::protoAccount)
                     .collect(Collectors.toList());
-            member.clearAccessToken();
 
             return GetAccountsResponse.newBuilder()
                     .addAllAccounts(accounts)
@@ -253,9 +253,8 @@ public class ProxyServer extends ProxyServiceImplBase {
                     tokenId,
                     TextFormat.shortDebugString(request));
 
-            member.useAccessToken(tokenId);
-            Account account = member.getAccount(request.getAccountId());
-            member.clearAccessToken();
+            Representable representable = member.forAccessToken(tokenId);
+            Account account = representable.getAccount(request.getAccountId());
 
             return GetAccountResponse.newBuilder()
                     .setAccount(account.protoAccount())
@@ -274,9 +273,8 @@ public class ProxyServer extends ProxyServiceImplBase {
                     tokenId,
                     TextFormat.shortDebugString(request));
 
-            member.useAccessToken(tokenId);
-            Balance balance = member.getBalance(request.getAccountId(), STANDARD);
-            member.clearAccessToken();
+            Representable representable = member.forAccessToken(tokenId);
+            Balance balance = representable.getBalance(request.getAccountId(), STANDARD);
 
             return GetBalanceResponse.newBuilder()
                     .setBalance(balance)
@@ -295,12 +293,11 @@ public class ProxyServer extends ProxyServiceImplBase {
                     tokenId,
                     TextFormat.shortDebugString(request));
 
-            member.useAccessToken(tokenId);
-            Transaction transaction = member.getTransaction(
+            Representable representable = member.forAccessToken(tokenId);
+            Transaction transaction = representable.getTransaction(
                     request.getAccountId(),
                     request.getTransactionId(),
                     STANDARD);
-            member.clearAccessToken();
 
             return GetTransactionResponse.newBuilder()
                     .setTransaction(transaction)
@@ -320,13 +317,12 @@ public class ProxyServer extends ProxyServiceImplBase {
                     TextFormat.shortDebugString(request));
             checkArgument(request.getLimit() > 0, "Limit not set properly!");
 
-            member.useAccessToken(tokenId);
-            PagedList<Transaction, String> transactions = member.getTransactions(
+            Representable representable = member.forAccessToken(tokenId);
+            PagedList<Transaction, String> transactions = representable.getTransactions(
                     request.getAccountId(),
                     request.getOffset(),
                     request.getLimit(),
                     STANDARD);
-            member.clearAccessToken();
 
             return GetTransactionsResponse.newBuilder()
                     .addAllTransactions(transactions.getList())

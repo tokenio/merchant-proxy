@@ -101,6 +101,8 @@ public class Application {
         put("/*", (req, res) -> handle(bridge, req));
         delete("/*", (req, res) -> handle(bridge, req));
         patch("/*", (req, res) -> handle(bridge, req));
+
+        // Register error handlers
         exception(
                 StatusRuntimeException.class,
                 Application::handleStatusError);
