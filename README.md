@@ -4,8 +4,8 @@ The merchant proxy is a HTTP wrapper server around the [Java SDK](https://github
 which enables merchants to initiate payments from a user, and access user's account
 information.
 
-Following the [Token Request Flow](https://developer.token.io/token-request), a merchant can obtain an id of a token that is endorsed
-by a user. Then it can fetch the details of that token, and
+Following the [Token Request Flow](https://developer.token.io/token-request), a merchant can obtain 
+an id of a token that is endorsed by a user. Then it can fetch the details of that token, and
 use the token to create a payment or access the user's account information, depending on the
 type of the requested resources.
 
@@ -14,9 +14,11 @@ The definitions of the HTTP endpoints can be found [here](src/main/proto/proxy.p
 ## Configuration
 The configuration options can be found in [application.conf](src/main/resources/application.conf).
 Make sure to configure your own domain name. It will serve as the alias of your token account. Your
-[keys](https://developer.token.io/overview/#key-management) will be stored in the specified key directory. Remember to take good care of your keys.
+[keys](https://developer.token.io/overview/#key-management) will be stored in the specified key
+directory. Remember to take good care of your keys.
 
-Note that we will need to verify your domain name in the production environment, but not in the sandbox environment.
+Note that we will need to verify your domain name in the production environment, but not in the
+sandbox environment.
 
 ## Usage
 The steps to initiate a payment:
@@ -45,8 +47,8 @@ occur once the payment is approved by the user (This will require a download of 
 most of the banks).
 6. Call GET /parse-token-request-callback to retrieve the token id.
 7. Call GET /tokens/{token_id} to get details on that token.
-8. Call PUT /use-access-token to use the access token.
-9. Fetch account, balance and transactions data via the corresponding endpoints.
+8. Put the token id in the Authorization header to fetch account, balance and transactions data via
+the corresponding endpoints.
 
 ## Payment Flow Walk-through
 
@@ -67,7 +69,7 @@ curl -X GET "http://127.0.0.1:4567/member"
 
 ####  Create Token Request - POST /token-requests
 ```bash
-curl -X POST -H 'Content-Type: application/json' "http://127.0.0.1:4567/token-requests" -d '{"amount":"4.99","currency":"EUR","description":"Book Purchase","destination":{"sepa":{"iban":"DE16700222000072880129"}}, "callbackUrl":"http://localhost:3000/redeem"}'
+curl -X POST -H 'Content-Type: application/json' "http://127.0.0.1:4567/transfer-token-requests" -d '{"amount":"4.99","currency":"EUR","description":"Book Purchase","destination":{"sepa":{"iban":"DE16700222000072880129"}}, "callbackUrl":"http://localhost:3000/redeem"}'
 ```
 
 ```json
@@ -266,19 +268,9 @@ curl -X GET "http://127.0.0.1:4567/parse-token-request-callback?csrfToken=456&ur
 }
 ```
 
-####  Use Access Token - PUT /use-access-token
-```bash
-curl -X PUT -H 'Content-Type: application/json' "http://127.0.0.1:4567/use-access-token" -d '{"tokenId":"ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq"}'
-```
-
-```json
-{
-}
-```
-
 ####  Get Accounts - GET /accounts
 ```bash
-curl -X GET "http://127.0.0.1:4567/accounts"
+curl -H "Authorization: ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq" -X GET "http://127.0.0.1:4567/accounts"
 ```
 
 ```json
@@ -299,7 +291,7 @@ curl -X GET "http://127.0.0.1:4567/accounts"
 
 ####  Get Account - GET /accounts/{account_id}
 ```bash
-curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ"
+curl -H "Authorization: ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq" -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ"
 ```
 
 ```json
@@ -320,7 +312,7 @@ curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRb
 
 ####  Get Transactions - GET /accounts/{account_id}/transactions?offset={offset}&limit={limit}
 ```bash
-curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/transactions?limit=2"
+curl -H "Authorization: ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq" -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/transactions?limit=2"
 ```
 
 ```json
@@ -376,7 +368,7 @@ curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRb
 
 ####  Get Transaction - GET /accounts/{account_id}/transactions/{transaction_id}
 ```bash
-curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/transactions/5185dd59-0d22-419a-9c38-a2de8165f76a"
+curl -H "Authorization: ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq" -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/transactions/5185dd59-0d22-419a-9c38-a2de8165f76a"
 ```
 
 ```json
@@ -410,7 +402,7 @@ curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRb
 
 ####  Get Balance - GET /accounts/{account_id}/balance
 ```bash
-curl -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/balance"
+curl -H "Authorization: ta:4yr8Aow193um9EJ8SE231Aud6JKGf5xyTHGHknar15QF:5zKtXEAq" -X GET "http://127.0.0.1:4567/accounts/a:6VAYc1RooMSaDjVkfCV22e4FYB4sTxhDRbfQ9JtUnuCw:8QSLX5njxscQ/balance"
 ```
 
 ```json

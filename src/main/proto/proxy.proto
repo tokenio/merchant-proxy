@@ -33,16 +33,17 @@ message CreateTransferResponse {
   io.token.proto.common.transfer.Transfer transfer = 1;
 }
 
-message StoreTokenRequestRequest {
+message RequestTransferTokenRequest {
   double amount = 1;
   string currency = 2;
   string description = 3;
   io.token.proto.common.account.BankAccount destination = 4;
   string ref_id = 5;
   string callback_url = 6;
+  string bank_id = 7; // Optional, specify the bank id if you want to bypass the bank selection page
 }
 
-message StoreTokenRequestResponse {
+message RequestTransferTokenResponse {
   string token_request_id = 1;
 }
 
@@ -68,17 +69,11 @@ message ParseTokenRequestCallbackResponse {
 
 message RequestAccessTokenRequest {
   string callback_url = 1;
+  string bank_id = 2; // Optional, specify the bank id if you want to bypass the bank selection page
 }
 
 message RequestAccessTokenResponse {
   string token_request_id = 1;
-}
-
-message UseAccessTokenRequest {
-  string token_id = 1;
-}
-
-message UseAccessTokenResponse {
 }
 
 message GetAccountsRequest {
@@ -147,9 +142,9 @@ service ProxyService {
       };
   }
 
-  rpc StoreTokenRequest (StoreTokenRequestRequest) returns (StoreTokenRequestResponse) {
+  rpc RequestTransferToken (RequestTransferTokenRequest) returns (RequestTransferTokenResponse) {
     option (google.api.http) = {
-        post: "/token-requests"
+        post: "/transfer-token-requests"
     };
   }
 
@@ -165,15 +160,9 @@ service ProxyService {
     };
   }
 
-  rpc RequestAccess (RequestAccessTokenRequest) returns (RequestAccessTokenResponse) {
+  rpc RequestAccessToken (RequestAccessTokenRequest) returns (RequestAccessTokenResponse) {
     option (google.api.http) = {
         post: "/access-token-requests"
-    };
-  }
-
-  rpc UseAccessToken (UseAccessTokenRequest) returns (UseAccessTokenResponse) {
-    option (google.api.http) = {
-        put: "/use-access-token"
     };
   }
 
