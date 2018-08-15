@@ -40,6 +40,7 @@ message StoreTokenRequestRequest {
   io.token.proto.common.account.BankAccount destination = 4;
   string ref_id = 5;
   string callback_url = 6;
+  string bank_id = 7; // Optional, specify the bank id if you want to bypass the bank selection page
 }
 
 message StoreTokenRequestResponse {
@@ -68,6 +69,7 @@ message ParseTokenRequestCallbackResponse {
 
 message RequestAccessTokenRequest {
   string callback_url = 1;
+  string bank_id = 2; // Optional, specify the bank id if you want to bypass the bank selection page
 }
 
 message RequestAccessTokenResponse {

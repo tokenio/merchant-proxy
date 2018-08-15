@@ -2,6 +2,7 @@ package server;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.grpc.Status.PERMISSION_DENIED;
+import static io.token.TokenRequest.TokenRequestOptions.BANK_ID;
 import static io.token.TokenRequest.TokenRequestOptions.REDIRECT_URL;
 import static io.token.proto.common.alias.AliasProtos.Alias.Type.DOMAIN;
 import static io.token.proto.common.security.SecurityProtos.Key.Level.STANDARD;
@@ -151,9 +152,14 @@ public class ProxyServer extends ProxyServiceImplBase {
                             .setAccount(request.getDestination())
                             .build());
 
-            String tokenRequestId = member.storeTokenRequest(TokenRequest
+            TokenRequest tokenRequest = TokenRequest
                     .create(transferTokenBuilder)
-                    .setOption(REDIRECT_URL, request.getCallbackUrl()));
+                    .setOption(REDIRECT_URL, request.getCallbackUrl());
+            if (!request.getBankId().isEmpty()) {
+                tokenRequest.setOption(BANK_ID, request.getBankId());
+            }
+
+            String tokenRequestId = member.storeTokenRequest(tokenRequest);
 
             return StoreTokenRequestResponse.newBuilder()
                     .setTokenRequestId(tokenRequestId)
@@ -173,9 +179,14 @@ public class ProxyServer extends ProxyServiceImplBase {
                     .forAllBalances()
                     .forAllTransactions();
 
-            String tokenRequestId = member.storeTokenRequest(TokenRequest
+            TokenRequest tokenRequest = TokenRequest
                     .create(accessTokenBuilder)
-                    .setOption(REDIRECT_URL, request.getCallbackUrl()));
+                    .setOption(REDIRECT_URL, request.getCallbackUrl());
+            if (!request.getBankId().isEmpty()) {
+                tokenRequest.setOption(BANK_ID, request.getBankId());
+            }
+
+            String tokenRequestId = member.storeTokenRequest(tokenRequest);
 
             return RequestAccessTokenResponse.newBuilder()
                     .setTokenRequestId(tokenRequestId)
