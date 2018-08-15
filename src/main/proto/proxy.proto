@@ -33,7 +33,7 @@ message CreateTransferResponse {
   io.token.proto.common.transfer.Transfer transfer = 1;
 }
 
-message StoreTokenRequestRequest {
+message RequestTransferTokenRequest {
   double amount = 1;
   string currency = 2;
   string description = 3;
@@ -43,7 +43,7 @@ message StoreTokenRequestRequest {
   string bank_id = 7; // Optional, specify the bank id if you want to bypass the bank selection page
 }
 
-message StoreTokenRequestResponse {
+message RequestTransferTokenResponse {
   string token_request_id = 1;
 }
 
@@ -142,9 +142,9 @@ service ProxyService {
       };
   }
 
-  rpc StoreTokenRequest (StoreTokenRequestRequest) returns (StoreTokenRequestResponse) {
+  rpc RequestTransferToken (RequestTransferTokenRequest) returns (RequestTransferTokenResponse) {
     option (google.api.http) = {
-        post: "/token-requests"
+        post: "/transfer-token-requests"
     };
   }
 
@@ -160,7 +160,7 @@ service ProxyService {
     };
   }
 
-  rpc RequestAccess (RequestAccessTokenRequest) returns (RequestAccessTokenResponse) {
+  rpc RequestAccessToken (RequestAccessTokenRequest) returns (RequestAccessTokenResponse) {
     option (google.api.http) = {
         post: "/access-token-requests"
     };

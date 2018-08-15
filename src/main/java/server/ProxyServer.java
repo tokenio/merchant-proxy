@@ -20,6 +20,8 @@ import static server.proto.Proxy.GetTransactionsRequest;
 import static server.proto.Proxy.GetTransactionsResponse;
 import static server.proto.Proxy.RequestAccessTokenRequest;
 import static server.proto.Proxy.RequestAccessTokenResponse;
+import static server.proto.Proxy.RequestTransferTokenRequest;
+import static server.proto.Proxy.RequestTransferTokenResponse;
 
 import com.google.protobuf.TextFormat;
 import com.typesafe.config.Config;
@@ -51,8 +53,6 @@ import server.proto.Proxy.GetTokenRequest;
 import server.proto.Proxy.GetTokenResponse;
 import server.proto.Proxy.ParseTokenRequestCallbackRequest;
 import server.proto.Proxy.ParseTokenRequestCallbackResponse;
-import server.proto.Proxy.StoreTokenRequestRequest;
-import server.proto.Proxy.StoreTokenRequestResponse;
 import server.proto.ProxyServiceGrpc.ProxyServiceImplBase;
 
 import java.io.File;
@@ -135,9 +135,9 @@ public class ProxyServer extends ProxyServiceImplBase {
     }
 
     @Override
-    public void storeTokenRequest(
-            StoreTokenRequestRequest request,
-            StreamObserver<StoreTokenRequestResponse> responseObserver) {
+    public void requestTransferToken(
+            RequestTransferTokenRequest request,
+            StreamObserver<RequestTransferTokenResponse> responseObserver) {
         execute(responseObserver, () -> {
             logger.info("Store token request: ({})", TextFormat.shortDebugString(request));
 
@@ -161,14 +161,14 @@ public class ProxyServer extends ProxyServiceImplBase {
 
             String tokenRequestId = member.storeTokenRequest(tokenRequest);
 
-            return StoreTokenRequestResponse.newBuilder()
+            return RequestTransferTokenResponse.newBuilder()
                     .setTokenRequestId(tokenRequestId)
                     .build();
         });
     }
 
     @Override
-    public void requestAccess(
+    public void requestAccessToken(
             RequestAccessTokenRequest request,
             StreamObserver<RequestAccessTokenResponse> responseObserver) {
         execute(responseObserver, () -> {
@@ -244,7 +244,7 @@ public class ProxyServer extends ProxyServiceImplBase {
             Representable representable = member.forAccessToken(tokenId);
             List<AccountProtos.Account> accounts = representable.getAccounts()
                     .stream()
-                    .map(Account::protoAccount)
+                    .map(Account::toProto)
                     .collect(Collectors.toList());
 
             return GetAccountsResponse.newBuilder()
@@ -268,7 +268,7 @@ public class ProxyServer extends ProxyServiceImplBase {
             Account account = representable.getAccount(request.getAccountId());
 
             return GetAccountResponse.newBuilder()
-                    .setAccount(account.protoAccount())
+                    .setAccount(account.toProto())
                     .build();
         });
     }
