@@ -69,7 +69,7 @@ curl -X GET "http://127.0.0.1:4567/member"
 
 ####  Create Token Request - POST /token-requests
 ```bash
-curl -X POST -H 'Content-Type: application/json' "http://127.0.0.1:4567/token-requests" -d '{"amount":"4.99","currency":"EUR","description":"Book Purchase","destination":{"sepa":{"iban":"DE16700222000072880129"}}, "callbackUrl":"http://localhost:3000/redeem"}'
+curl -X POST -H 'Content-Type: application/json' "http://127.0.0.1:4567/transfer-token-requests" -d '{"amount":"4.99","currency":"EUR","description":"Book Purchase","destination":{"sepa":{"iban":"DE16700222000072880129"}}, "callbackUrl":"http://localhost:3000/redeem"}'
 ```
 
 ```json
