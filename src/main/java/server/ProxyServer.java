@@ -82,16 +82,6 @@ public class ProxyServer extends ProxyServiceImplBase {
         this.config = config;
         tokenIO = initializeSdk();
         member = initializeMember(tokenIO);
-
-        // TODO(RD-581): Deprecate
-        new Timer().schedule(
-                new TimerTask() {
-                    public void run() {
-                        tokenIO.getMember(member.memberId());
-                    }
-                },
-                0,
-                2 * 60 * 1000);
     }
 
     @Override
