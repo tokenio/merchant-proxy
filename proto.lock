@@ -1,0 +1,545 @@
+{
+  "definitions": [
+    {
+      "protopath": "src:/:main:/:proto:/:proxy.proto",
+      "def": {
+        "messages": [
+          {
+            "name": "GetMemberRequest"
+          },
+          {
+            "name": "GetMemberResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "member_id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "aliases",
+                "type": "io.token.proto.common.alias.Alias",
+                "is_repeated": true
+              }
+            ]
+          },
+          {
+            "name": "GetTokenRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetTokenResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token",
+                "type": "io.token.proto.common.token.Token"
+              }
+            ]
+          },
+          {
+            "name": "CreateTransferRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "CreateTransferResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "transfer",
+                "type": "io.token.proto.common.transfer.Transfer"
+              }
+            ]
+          },
+          {
+            "name": "RequestTransferTokenRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "amount",
+                "type": "double"
+              },
+              {
+                "id": 2,
+                "name": "currency",
+                "type": "string"
+              },
+              {
+                "id": 3,
+                "name": "description",
+                "type": "string"
+              },
+              {
+                "id": 4,
+                "name": "destination",
+                "type": "io.token.proto.common.account.BankAccount"
+              },
+              {
+                "id": 5,
+                "name": "ref_id",
+                "type": "string"
+              },
+              {
+                "id": 6,
+                "name": "callback_url",
+                "type": "string"
+              },
+              {
+                "id": 7,
+                "name": "bank_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "RequestTransferTokenResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token_request_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GenerateTokenRequestUrlRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "request_id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "state",
+                "type": "string"
+              },
+              {
+                "id": 3,
+                "name": "csrf_token",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GenerateTokenRequestUrlResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "url",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "ParseTokenRequestCallbackRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "url",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "csrf_token",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "ParseTokenRequestCallbackResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token_id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "state",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "RequestAccessTokenRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "callback_url",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "bank_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "RequestAccessTokenResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "token_request_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetAccountsRequest"
+          },
+          {
+            "name": "GetAccountsResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "accounts",
+                "type": "io.token.proto.common.account.Account",
+                "is_repeated": true
+              }
+            ]
+          },
+          {
+            "name": "GetAccountRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "account_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetAccountResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "account",
+                "type": "io.token.proto.common.account.Account"
+              }
+            ]
+          },
+          {
+            "name": "GetBalanceRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "account_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetBalanceResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "balance",
+                "type": "io.token.proto.common.transaction.Balance"
+              }
+            ]
+          },
+          {
+            "name": "GetTransactionsRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "account_id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "limit",
+                "type": "int32"
+              },
+              {
+                "id": 3,
+                "name": "offset",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetTransactionsResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "transactions",
+                "type": "io.token.proto.common.transaction.Transaction",
+                "is_repeated": true
+              },
+              {
+                "id": 2,
+                "name": "offset",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetTransactionRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "account_id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "transaction_id",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "GetTransactionResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "transaction",
+                "type": "io.token.proto.common.transaction.Transaction"
+              }
+            ]
+          }
+        ],
+        "services": [
+          {
+            "name": "ProxyService",
+            "rpcs": [
+              {
+                "name": "GetMember",
+                "in_type": "GetMemberRequest",
+                "out_type": "GetMemberResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/member"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetToken",
+                "in_type": "GetTokenRequest",
+                "out_type": "GetTokenResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/tokens/{token_id}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "CreateTransfer",
+                "in_type": "CreateTransferRequest",
+                "out_type": "CreateTransferResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "post",
+                        "value": "/transfers"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "RequestTransferToken",
+                "in_type": "RequestTransferTokenRequest",
+                "out_type": "RequestTransferTokenResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "post",
+                        "value": "/transfer-token-requests"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GenerateTokenRequestUrl",
+                "in_type": "GenerateTokenRequestUrlRequest",
+                "out_type": "GenerateTokenRequestUrlResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/token-request-url?requestId={request_id}\u0026state={state}\u0026csrfToken={csrf_token}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "ParseTokenRequestCallback",
+                "in_type": "ParseTokenRequestCallbackRequest",
+                "out_type": "ParseTokenRequestCallbackResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/parse-token-request-callback?url={url}\u0026csrfToken={csrf_token}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "RequestAccessToken",
+                "in_type": "RequestAccessTokenRequest",
+                "out_type": "RequestAccessTokenResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "post",
+                        "value": "/access-token-requests"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetAccounts",
+                "in_type": "GetAccountsRequest",
+                "out_type": "GetAccountsResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/accounts"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetAccount",
+                "in_type": "GetAccountRequest",
+                "out_type": "GetAccountResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/accounts/{account_id}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetBalance",
+                "in_type": "GetBalanceRequest",
+                "out_type": "GetBalanceResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/accounts/{account_id}/balance"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetTransaction",
+                "in_type": "GetTransactionRequest",
+                "out_type": "GetTransactionResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/accounts/{account_id}/transactions/{transaction_id}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "GetTransactions",
+                "in_type": "GetTransactionsRequest",
+                "out_type": "GetTransactionsResponse",
+                "options": [
+                  {
+                    "name": "(google.api.http)",
+                    "aggregated": [
+                      {
+                        "name": "get",
+                        "value": "/accounts/{account_id}/transactions?offset={offset}\u0026limit={limit}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "imports": [
+          {
+            "path": "token.proto"
+          },
+          {
+            "path": "alias.proto"
+          },
+          {
+            "path": "transfer.proto"
+          },
+          {
+            "path": "account.proto"
+          },
+          {
+            "path": "member.proto"
+          },
+          {
+            "path": "transaction.proto"
+          },
+          {
+            "path": "google/api/annotations.proto"
+          }
+        ],
+        "package": {
+          "name": "server.proto"
+        }
+      }
+    }
+  ]
+}
